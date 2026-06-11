@@ -28,13 +28,17 @@ class Event(BaseModel):
 
     model_config = {"extra": "forbid"}
 
+    titre: str
     date: str
     date_debut: str
     date_fin: Optional[str]
     lieu: str
     prix: str
     description: str
+    description_longue: str
+    accroche: str
     lien: str
+    lien_billetterie: Optional[str]
     categorie: Categorie
 
 

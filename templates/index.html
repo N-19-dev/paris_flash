@@ -180,6 +180,34 @@
     Paris Flash — généré automatiquement
   </footer>
 
+  <!-- EVENT DETAIL MODAL -->
+  <div id="event-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div id="modal-backdrop" class="absolute inset-0 bg-black/80"></div>
+    <div id="modal-panel" class="relative bg-neutral-900 border-l-8 rounded-xl max-w-lg w-full max-h-[85vh] overflow-y-auto p-6">
+      <button id="modal-close" aria-label="Fermer" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full border-2 border-neutral-700 text-neutral-300 hover:text-white hover:border-white text-xl leading-none">&times;</button>
+      <span id="modal-category" class="font-display text-xs uppercase tracking-widest"></span>
+      <h2 id="modal-title" class="font-display text-2xl sm:text-3xl leading-tight mt-1 mb-3 pr-8"></h2>
+      <div class="flex flex-wrap gap-2 mb-4">
+        <span id="modal-date" class="text-xs font-bold px-2 py-1 rounded-full border border-neutral-700"></span>
+        <span id="modal-lieu" class="text-xs font-bold px-2 py-1 rounded-full border border-neutral-700"></span>
+        <span id="modal-prix" class="text-xs font-bold px-2 py-1 rounded-full border border-neutral-700"></span>
+      </div>
+      <p id="modal-description" class="text-sm text-neutral-300 leading-relaxed mb-4"></p>
+
+      <div class="mb-6">
+        <h3 class="font-display text-xs uppercase tracking-widest text-neutral-500 mb-1">Pour ton post Insta</h3>
+        <p id="modal-accroche" class="text-sm text-neutral-300 leading-relaxed"></p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 mb-3">
+        <a id="modal-link" target="_blank" rel="noopener noreferrer" class="font-display text-sm uppercase tracking-wide text-center px-5 py-3 rounded-full border-2 border-neutral-700 text-neutral-300 hover:border-white hover:text-white transition-colors">Voir l'évènement</a>
+        <a id="modal-billetterie" target="_blank" rel="noopener noreferrer" class="hidden font-display text-sm uppercase tracking-wide text-center px-5 py-3 rounded-full bg-white text-black hover:bg-neutral-200 transition-colors">Réserver</a>
+      </div>
+
+      <button id="modal-copy" class="w-full font-display text-sm uppercase tracking-wide text-center px-5 py-3 rounded-full bg-neon-pink text-black hover:opacity-90 transition-opacity">Copier pour Instagram</button>
+    </div>
+  </div>
+
   <!-- Injected by src/build.py -->
   <script id="events-data" type="application/json">__EVENTS_JSON__</script>
 
@@ -202,6 +230,98 @@
       div.textContent = str ?? '';
       return div.innerHTML;
     }
+
+    // EVENT DETAIL MODAL
+    const modal = document.getElementById('event-modal');
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modalClose = document.getElementById('modal-close');
+    const modalCategory = document.getElementById('modal-category');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDate = document.getElementById('modal-date');
+    const modalLieu = document.getElementById('modal-lieu');
+    const modalPrix = document.getElementById('modal-prix');
+    const modalDescription = document.getElementById('modal-description');
+    const modalAccroche = document.getElementById('modal-accroche');
+    const modalLink = document.getElementById('modal-link');
+    const modalBilletterie = document.getElementById('modal-billetterie');
+    const modalCopy = document.getElementById('modal-copy');
+    const modalPanel = document.getElementById('modal-panel');
+
+    let currentEvent = null;
+
+    function buildInstagramCaption(ev) {
+      const hashtag = `#${ev.categorie.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-zA-Z0-9]/g, '')}`;
+      return [
+        ev.titre.toUpperCase(),
+        '',
+        `📍 ${ev.lieu}`,
+        `📅 ${ev.date}`,
+        `💶 ${ev.prix}`,
+        '',
+        ev.description_longue || ev.description,
+        '',
+        ev.accroche,
+        '',
+        `👉 ${ev.lien}`,
+        '',
+        `#Paris #ParisFlash ${hashtag}`,
+      ].join('\n');
+    }
+
+    function openModal(ev) {
+      const color = CATEGORY_COLORS[ev.categorie] || '#ffffff';
+      currentEvent = ev;
+
+      modalPanel.style.borderColor = color;
+      modalCategory.textContent = ev.categorie;
+      modalCategory.style.color = color;
+      modalTitle.textContent = ev.titre;
+      modalDate.textContent = ev.date;
+      modalLieu.textContent = ev.lieu;
+      modalPrix.textContent = ev.prix;
+      modalDescription.textContent = ev.description_longue || ev.description;
+      modalAccroche.textContent = ev.accroche || '';
+      modalCopy.textContent = 'Copier pour Instagram';
+
+      modalLink.href = ev.lien;
+
+      if (ev.lien_billetterie) {
+        modalBilletterie.href = ev.lien_billetterie;
+        modalBilletterie.classList.remove('hidden');
+      } else {
+        modalBilletterie.classList.add('hidden');
+      }
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+    }
+
+    modalBackdrop.addEventListener('click', closeModal);
+    modalClose.addEventListener('click', closeModal);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+    });
+
+    modalCopy.addEventListener('click', async () => {
+      if (!currentEvent) return;
+      const text = buildInstagramCaption(currentEvent);
+      try {
+        await navigator.clipboard.writeText(text);
+        modalCopy.textContent = 'Copié !';
+      } catch (err) {
+        modalCopy.textContent = 'Erreur de copie';
+      }
+      setTimeout(() => {
+        modalCopy.textContent = 'Copier pour Instagram';
+      }, 1500);
+    });
 
     const WEEKEND_WORDS = ['samedi', 'dimanche', 'week-end', 'weekend'];
     const WEEKDAY_WORDS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
@@ -243,17 +363,16 @@
       list.forEach((ev) => {
         const color = CATEGORY_COLORS[ev.categorie] || '#ffffff';
 
-        const card = document.createElement('a');
-        card.href = ev.lien;
-        card.target = '_blank';
-        card.rel = 'noopener noreferrer';
+        const card = document.createElement('div');
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
         card.dataset.category = ev.categorie;
         card.dataset.periode = classifyPeriode(ev.date);
         card.dataset.prix = classifyPrix(ev.prix);
         card.dataset.dateDebut = ev.date_debut || '';
         card.dataset.dateFin = ev.date_fin || ev.date_debut || '';
         card.className =
-          'card group block bg-neutral-900 border-l-8 rounded-r-xl p-4 hover:bg-neutral-800';
+          'card group block bg-neutral-900 border-l-8 rounded-r-xl p-4 hover:bg-neutral-800 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white';
         card.style.borderColor = color;
 
         card.innerHTML = `
@@ -265,13 +384,22 @@
               ${escapeHtml(ev.prix)}
             </span>
           </div>
-          <h2 class="font-display text-lg sm:text-xl leading-tight mb-1">${escapeHtml(ev.lieu)}</h2>
+          <h2 class="font-display text-lg sm:text-xl leading-tight mb-1">${escapeHtml(ev.titre)}</h2>
+          <p class="text-xs font-bold uppercase tracking-wide text-neutral-500 mb-2">${escapeHtml(ev.lieu)}</p>
           <p class="text-sm text-neutral-300 mb-3">${escapeHtml(ev.description)}</p>
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold uppercase tracking-wide text-neutral-400">${escapeHtml(ev.date)}</span>
             <span class="font-display text-base group-hover:translate-x-1 transition-transform" style="color:${color}">&rarr;</span>
           </div>
         `;
+
+        card.addEventListener('click', () => openModal(ev));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openModal(ev);
+          }
+        });
 
         grid.appendChild(card);
       });

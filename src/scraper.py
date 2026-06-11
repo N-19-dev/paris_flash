@@ -58,13 +58,17 @@ On te fournit :
 
 Pour CHAQUE événement distinct et concret que tu identifies, produis un objet JSON avec EXACTEMENT ces champs :
 
+- "titre": titre court et accrocheur de l'événement lui-même (ex: "Concert David Guetta", "Expo Impressionnistes Méconnus"), DISTINCT du nom du lieu qui l'accueille.
 - "date": format court et lisible en français (ex: "Mardi 9 Juin", "Du 12 au 15 juin", "Tous les week-ends de juin"). Si aucune date précise n'est donnée, écris "Date non précisée".
 - "date_debut": date de DÉBUT au format ISO "AAAA-MM-JJ", déduite de "date" et de la date du jour fournie (ex: "Mardi 9 Juin" -> "2026-06-09"). Pour un événement récurrent ou étalé sur une période (ex: "Tous les vendredis de juin", "Du 12 au 15 juin"), utilise le premier jour de la période. Si la date est totalement inconnue, utilise la date du jour fournie.
 - "date_fin": date de FIN au format ISO "AAAA-MM-JJ", ou null si l'événement n'a lieu qu'un seul jour. Pour une période ou un événement récurrent, utilise le dernier jour de la période.
 - "lieu": nom du lieu + arrondissement si connu (ex: "Le Hasard Ludique, 18e"). Si l'arrondissement est inconnu, indique juste le nom du lieu, ou "Paris" si rien n'est précisé.
 - "prix": texte libre et court (ex: "Gratuit", "12€", "Entrée libre", "À partir de 15€"). Si inconnu, écris "Non précisé".
 - "description": UNE SEULE phrase courte (15 mots maximum) qui explique le concept de l'événement, sans superlatifs ni formules marketing.
-- "lien": l'URL directe vers la page de l'événement si elle correspond à un des liens fournis, sinon réutilise l'URL source telle quelle.
+- "description_longue": 2 à 4 phrases qui détaillent en quoi consiste l'événement (déroulement, ambiance, ce que les visiteurs peuvent y faire/voir), sans superlatifs ni formules marketing. Si peu d'informations sont disponibles, reformule la description courte de façon plus détaillée plutôt que d'inventer des détails.
+- "accroche": 1 à 2 phrases avec un ton enthousiaste et promotionnel, écrites pour servir de légende à un post Instagram (peuvent inclure superlatifs, emojis et formulations marketing, contrairement à "description" et "description_longue").
+- "lien": cherche activement dans la liste de liens fournis celui qui correspond le PLUS PRÉCISÉMENT à cet événement (le texte du lien mentionne le lieu, le titre ou l'activité de l'événement). Utilise cette URL en priorité, même si elle ne correspond pas exactement à l'URL source. Réutilise l'URL source telle quelle UNIQUEMENT si aucun lien plus spécifique n'existe dans la liste fournie.
+- "lien_billetterie": si l'événement nécessite une réservation ou l'achat d'un billet ET qu'un lien de billetterie/réservation distinct figure dans les liens fournis, indique cette URL. Sinon, mets null (NE PAS réutiliser "lien" ni inventer une URL).
 - "categorie": choisis EXACTEMENT une valeur parmi : "Soirées", "Bouffe", "Culture", "Sport", "Loisir", "Concert / cinéma".
 
 Règles strictes :
