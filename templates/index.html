@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paris Flash — Quoi faire à Paris</title>
+  <meta name="description" content="Trouve quoi faire à Paris en moins de 3 secondes. Soirées, bouffe, culture, sport, loisirs et concerts." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'neon-pink': '#ff2d78',
+            'neon-orange': '#ff6a00',
+            'neon-purple': '#a742f5',
+            'neon-cyan': '#00e5ff',
+            'neon-yellow': '#ffd60a',
+            'neon-red': '#ff3b3b',
+          },
+          fontFamily: {
+            display: ['"Anton"', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body { background-color: #0a0a0a; font-family: 'Inter', sans-serif; }
+
+    /* Smooth show/hide for filtered cards (flex layout reflows left, no gaps) */
+    #events-grid { display: flex; flex-wrap: wrap; }
+    .card {
+      transition: opacity 0.3s ease, transform 0.3s ease, flex-basis 0.3s ease,
+        max-width 0.3s ease, margin 0.3s ease, padding 0.3s ease, border-width 0.3s ease;
+      flex: 1 1 100%;
+      max-width: 100%;
+      opacity: 1;
+      transform: scale(1);
+    }
+    @media (min-width: 640px) {
+      .card { flex-basis: calc(50% - 0.5rem); max-width: calc(50% - 0.5rem); }
+    }
+    @media (min-width: 1024px) {
+      .card { flex-basis: calc(33.333% - 0.667rem); max-width: calc(33.333% - 0.667rem); }
+    }
+    .card-hidden {
+      opacity: 0;
+      transform: scale(0.92);
+      flex-basis: 0 !important;
+      max-width: 0 !important;
+      max-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-width: 0 !important;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .pill { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+    .pill:active { transform: scale(0.96); }
+    .pill.active { box-shadow: 0 0 0 4px #ffffff inset; transform: scale(1.05); }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-thumb { background: #ff2d78; border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 bg-black border-b-4 border-neon-yellow">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+      <h1 class="font-display text-3xl sm:text-5xl tracking-tight leading-none">
+        <span class="text-neon-pink">PARIS</span><span class="text-neon-yellow">FLASH</span>
+      </h1>
+      <p class="hidden sm:block font-display text-xs sm:text-sm tracking-[0.35em] text-neon-cyan uppercase">
+        Quoi faire, là, maintenant
+      </p>
+    </div>
+  </header>
+
+  <!-- CATEGORY FILTERS -->
+  <nav id="filters" class="max-w-6xl mx-auto px-4 py-6 flex flex-wrap gap-2 sm:gap-3">
+    <button
+      class="pill active font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full bg-white text-black"
+      data-category="all"
+    >
+      Tout
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#ff2d78"
+      data-category="Soirées"
+    >
+      Soirées
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#ff6a00"
+      data-category="Bouffe"
+    >
+      Bouffe
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#a742f5"
+      data-category="Culture"
+    >
+      Culture
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#00e5ff"
+      data-category="Sport"
+    >
+      Sport
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#ffd60a"
+      data-category="Loisir"
+    >
+      Loisir
+    </button>
+    <button
+      class="pill font-display text-sm sm:text-base uppercase tracking-wide px-5 py-2.5 rounded-full text-black"
+      style="background-color:#ff3b3b"
+      data-category="Concert / cinéma"
+    >
+      Concert / Cinéma
+    </button>
+  </nav>
+
+  <!-- EVENTS GRID -->
+  <main class="max-w-6xl mx-auto px-4 pb-24">
+    <div id="events-grid" class="gap-4"></div>
+    <p id="empty-state" class="hidden text-center font-display text-xl sm:text-2xl text-neutral-600 tracking-wide mt-20">
+      AUCUN ÉVÉNEMENT DANS CETTE CATÉGORIE
+    </p>
+  </main>
+
+  <footer class="border-t-4 border-neon-pink py-6 text-center text-xs text-neutral-500">
+    Paris Flash — généré automatiquement
+  </footer>
+
+  <!-- Injected by src/build.py -->
+  <script id="events-data" type="application/json">__EVENTS_JSON__</script>
+
+  <script>
+    const CATEGORY_COLORS = {
+      'Soirées': '#ff2d78',
+      'Bouffe': '#ff6a00',
+      'Culture': '#a742f5',
+      'Sport': '#00e5ff',
+      'Loisir': '#ffd60a',
+      'Concert / cinéma': '#ff3b3b',
+    };
+
+    const events = JSON.parse(document.getElementById('events-data').textContent);
+    const grid = document.getElementById('events-grid');
+    const emptyState = document.getElementById('empty-state');
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
+    function renderCards(list) {
+      grid.innerHTML = '';
+      list.forEach((ev) => {
+        const color = CATEGORY_COLORS[ev.categorie] || '#ffffff';
+
+        const card = document.createElement('a');
+        card.href = ev.lien;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+        card.dataset.category = ev.categorie;
+        card.className =
+          'card group block bg-neutral-900 border-l-8 rounded-r-xl p-4 hover:bg-neutral-800';
+        card.style.borderColor = color;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="font-display text-xs uppercase tracking-widest" style="color:${color}">
+              ${escapeHtml(ev.categorie)}
+            </span>
+            <span class="text-xs font-bold px-2 py-1 rounded-full border border-neutral-700 whitespace-nowrap">
+              ${escapeHtml(ev.prix)}
+            </span>
+          </div>
+          <h2 class="font-display text-lg sm:text-xl leading-tight mb-1">${escapeHtml(ev.lieu)}</h2>
+          <p class="text-sm text-neutral-300 mb-3">${escapeHtml(ev.description)}</p>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wide text-neutral-400">${escapeHtml(ev.date)}</span>
+            <span class="font-display text-base group-hover:translate-x-1 transition-transform" style="color:${color}">&rarr;</span>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function applyFilter(category) {
+      let visibleCount = 0;
+      document.querySelectorAll('#events-grid .card').forEach((card) => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.classList.remove('card-hidden');
+          visibleCount += 1;
+        } else {
+          card.classList.add('card-hidden');
+        }
+      });
+      emptyState.classList.toggle('hidden', visibleCount > 0);
+    }
+
+    document.querySelectorAll('#filters button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filters button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        applyFilter(btn.dataset.category);
+      });
+    });
+
+    renderCards(events);
+  </script>
+</body>
+</html>
