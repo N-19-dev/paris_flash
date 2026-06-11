@@ -13,6 +13,7 @@ import json
 import os
 import sys
 import time
+from datetime import date
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -50,6 +51,7 @@ MAX_LINKS = 60
 SYSTEM_PROMPT = f"""Tu es un assistant qui extrait des événements (sorties, soirées, expos, concerts, activités) à Paris à partir du contenu brut d'une page web.
 
 On te fournit :
+- la date du jour (pour déduire les années manquantes)
 - l'URL source de la page
 - le texte visible de la page
 - une liste de liens présents sur la page (texte du lien -> URL)
@@ -57,6 +59,8 @@ On te fournit :
 Pour CHAQUE événement distinct et concret que tu identifies, produis un objet JSON avec EXACTEMENT ces champs :
 
 - "date": format court et lisible en français (ex: "Mardi 9 Juin", "Du 12 au 15 juin", "Tous les week-ends de juin"). Si aucune date précise n'est donnée, écris "Date non précisée".
+- "date_debut": date de DÉBUT au format ISO "AAAA-MM-JJ", déduite de "date" et de la date du jour fournie (ex: "Mardi 9 Juin" -> "2026-06-09"). Pour un événement récurrent ou étalé sur une période (ex: "Tous les vendredis de juin", "Du 12 au 15 juin"), utilise le premier jour de la période. Si la date est totalement inconnue, utilise la date du jour fournie.
+- "date_fin": date de FIN au format ISO "AAAA-MM-JJ", ou null si l'événement n'a lieu qu'un seul jour. Pour une période ou un événement récurrent, utilise le dernier jour de la période.
 - "lieu": nom du lieu + arrondissement si connu (ex: "Le Hasard Ludique, 18e"). Si l'arrondissement est inconnu, indique juste le nom du lieu, ou "Paris" si rien n'est précisé.
 - "prix": texte libre et court (ex: "Gratuit", "12€", "Entrée libre", "À partir de 15€"). Si inconnu, écris "Non précisé".
 - "description": UNE SEULE phrase courte (15 mots maximum) qui explique le concept de l'événement, sans superlatifs ni formules marketing.
@@ -106,6 +110,7 @@ def fetch_page(url: str) -> tuple[str, list[tuple[str, str]]]:
 def extract_events(client: Mistral, source_url: str, text: str, links: list[tuple[str, str]]) -> list[Event]:
     links_block = "\n".join(f"- {label} -> {href}" for label, href in links)
     user_content = (
+        f"Date du jour : {date.today().isoformat()}\n\n"
         f"URL source : {source_url}\n\n"
         f"=== TEXTE DE LA PAGE ===\n{text}\n\n"
         f"=== LIENS DISPONIBLES ===\n{links_block}"

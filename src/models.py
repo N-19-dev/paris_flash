@@ -1,6 +1,6 @@
 """Shared data schema for Paris Flash events."""
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -29,6 +29,8 @@ class Event(BaseModel):
     model_config = {"extra": "forbid"}
 
     date: str
+    date_debut: str
+    date_fin: Optional[str]
     lieu: str
     prix: str
     description: str

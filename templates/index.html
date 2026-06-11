@@ -67,6 +67,12 @@
     .pill:active { transform: scale(0.96); }
     .pill.active { box-shadow: 0 0 0 4px #ffffff inset; transform: scale(1.05); }
 
+    .filter-pill { transition: all 0.15s ease; }
+    .filter-pill.active { background-color: #ffffff; color: #000000; border-color: #ffffff; }
+
+    .date-input { color-scheme: dark; }
+    .date-input::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
     ::-webkit-scrollbar { width: 8px; }
     ::-webkit-scrollbar-thumb { background: #ff2d78; border-radius: 9999px; }
   </style>
@@ -137,6 +143,31 @@
     </button>
   </nav>
 
+  <!-- DATE / PRICE FILTERS -->
+  <div class="max-w-6xl mx-auto px-4 pb-3 flex flex-wrap items-center gap-2">
+    <span class="font-display text-xs uppercase tracking-widest text-neutral-500 mr-1">Quand</span>
+    <button class="filter-pill active font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="periode" data-value="all">Tout</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="periode" data-value="semaine">Semaine</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="periode" data-value="weekend">Week-end</button>
+
+    <span class="text-neutral-700 mx-1">|</span>
+
+    <input type="date" id="date-start" aria-label="Date de début" class="date-input font-bold text-xs px-3 py-1.5 rounded-full border-2 border-neutral-700 bg-black text-neutral-300" />
+    <span class="text-neutral-600 font-bold">&rarr;</span>
+    <input type="date" id="date-end" aria-label="Date de fin" class="date-input font-bold text-xs px-3 py-1.5 rounded-full border-2 border-neutral-700 bg-black text-neutral-300" />
+    <button id="date-clear" class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300">Effacer</button>
+
+    <span class="font-display text-xs uppercase tracking-widest text-neutral-500 ml-4 mr-1">Prix</span>
+    <button class="filter-pill active font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="prix" data-value="all">Tout</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="prix" data-value="gratuit">Gratuit</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="prix" data-value="moins15">&lt; 15€</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="prix" data-value="15-30">15-30€</button>
+    <button class="filter-pill font-bold text-xs uppercase tracking-wider px-3 py-1.5 rounded-full border-2 border-neutral-700 text-neutral-300" data-group="prix" data-value="plus30">30€+</button>
+  </div>
+  <p class="max-w-6xl mx-auto px-4 pb-6 text-xs text-neutral-600">
+    Astuce : choisis une seule date pour un jour précis, ou deux dates pour une période.
+  </p>
+
   <!-- EVENTS GRID -->
   <main class="max-w-6xl mx-auto px-4 pb-24">
     <div id="events-grid" class="gap-4"></div>
@@ -172,6 +203,41 @@
       return div.innerHTML;
     }
 
+    const WEEKEND_WORDS = ['samedi', 'dimanche', 'week-end', 'weekend'];
+    const WEEKDAY_WORDS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+
+    // Best-effort classification of the free-text "date" field into 'semaine',
+    // 'weekend' or 'both'. 'both' (the default for unrecognized/recurring-all-week
+    // dates) matches every "Quand" filter.
+    function classifyPeriode(dateStr) {
+      const s = (dateStr || '').toLowerCase();
+
+      const hasWeekend = WEEKEND_WORDS.some((w) => s.includes(w));
+      const hasWeekday = WEEKDAY_WORDS.some((w) => s.includes(w));
+      const hasAllWeek = /tous les jours|chaque jour|toute la semaine|du lundi au dimanche/.test(s);
+
+      if (hasAllWeek || (hasWeekend && hasWeekday)) return 'both';
+      if (hasWeekend) return 'weekend';
+      if (hasWeekday) return 'semaine';
+      return 'both';
+    }
+
+    // Best-effort classification of the free-text "prix" field into a price bucket:
+    // "gratuit" / "moins15" / "15-30" / "plus30", or "" when no amount could be parsed
+    // (the card then matches every "Prix" filter).
+    function classifyPrix(prixStr) {
+      const s = (prixStr || '').toLowerCase();
+      if (/gratuit|entr[ée]e libre|libre|0\s*€/.test(s)) return 'gratuit';
+
+      const numbers = (s.match(/\d+([.,]\d+)?/g) || []).map((n) => parseFloat(n.replace(',', '.')));
+      if (numbers.length === 0) return '';
+
+      const price = Math.min(...numbers);
+      if (price < 15) return 'moins15';
+      if (price <= 30) return '15-30';
+      return 'plus30';
+    }
+
     function renderCards(list) {
       grid.innerHTML = '';
       list.forEach((ev) => {
@@ -182,6 +248,10 @@
         card.target = '_blank';
         card.rel = 'noopener noreferrer';
         card.dataset.category = ev.categorie;
+        card.dataset.periode = classifyPeriode(ev.date);
+        card.dataset.prix = classifyPrix(ev.prix);
+        card.dataset.dateDebut = ev.date_debut || '';
+        card.dataset.dateFin = ev.date_fin || ev.date_debut || '';
         card.className =
           'card group block bg-neutral-900 border-l-8 rounded-r-xl p-4 hover:bg-neutral-800';
         card.style.borderColor = color;
@@ -207,15 +277,36 @@
       });
     }
 
-    function applyFilter(category) {
+    const state = { category: 'all', periode: 'all', prix: 'all', dateStart: '', dateEnd: '' };
+
+    // Overlap check between the event's [date_debut, date_fin] range and the
+    // user-picked date or date range. No picker value selected = match all.
+    function matchesDateRange(card) {
+      let filterStart = state.dateStart;
+      let filterEnd = state.dateEnd;
+      if (!filterStart && !filterEnd) return true;
+      if (!filterStart) filterStart = filterEnd;
+      if (!filterEnd) filterEnd = filterStart;
+
+      const eventStart = card.dataset.dateDebut;
+      if (!eventStart) return true;
+      const eventEnd = card.dataset.dateFin || eventStart;
+
+      return eventStart <= filterEnd && eventEnd >= filterStart;
+    }
+
+    function applyFilters() {
       let visibleCount = 0;
       document.querySelectorAll('#events-grid .card').forEach((card) => {
-        if (category === 'all' || card.dataset.category === category) {
-          card.classList.remove('card-hidden');
-          visibleCount += 1;
-        } else {
-          card.classList.add('card-hidden');
-        }
+        const matchesCategory = state.category === 'all' || card.dataset.category === state.category;
+        const matchesPeriode =
+          state.periode === 'all' || card.dataset.periode === 'both' || card.dataset.periode === state.periode;
+        const matchesPrix = state.prix === 'all' || card.dataset.prix === '' || card.dataset.prix === state.prix;
+        const matchesDate = matchesDateRange(card);
+        const visible = matchesCategory && matchesPeriode && matchesPrix && matchesDate;
+
+        card.classList.toggle('card-hidden', !visible);
+        if (visible) visibleCount += 1;
       });
       emptyState.classList.toggle('hidden', visibleCount > 0);
     }
@@ -224,8 +315,41 @@
       btn.addEventListener('click', () => {
         document.querySelectorAll('#filters button').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
-        applyFilter(btn.dataset.category);
+        state.category = btn.dataset.category;
+        applyFilters();
       });
+    });
+
+    document.querySelectorAll('.filter-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const group = btn.dataset.group;
+        document
+          .querySelectorAll(`.filter-pill[data-group="${group}"]`)
+          .forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state[group] = btn.dataset.value;
+        applyFilters();
+      });
+    });
+
+    const dateStartInput = document.getElementById('date-start');
+    const dateEndInput = document.getElementById('date-end');
+    const dateClearBtn = document.getElementById('date-clear');
+
+    [dateStartInput, dateEndInput].forEach((input) => {
+      input.addEventListener('change', () => {
+        state.dateStart = dateStartInput.value;
+        state.dateEnd = dateEndInput.value;
+        applyFilters();
+      });
+    });
+
+    dateClearBtn.addEventListener('click', () => {
+      dateStartInput.value = '';
+      dateEndInput.value = '';
+      state.dateStart = '';
+      state.dateEnd = '';
+      applyFilters();
     });
 
     renderCards(events);

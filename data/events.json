@@ -1,6 +1,8 @@
 [
   {
     "date": "Tous les vendredis de Juin",
+    "date_debut": "2026-06-01",
+    "date_fin": "2026-06-30",
     "lieu": "Le Hasard Ludique, 18e",
     "prix": "Gratuit",
     "description": "Soirée DJ set en plein air sur la péniche avec vue sur les rails.",
@@ -9,6 +11,8 @@
   },
   {
     "date": "Mardi 9 Juin",
+    "date_debut": "2026-06-09",
+    "date_fin": null,
     "lieu": "Marché des Enfants Rouges, 3e",
     "prix": "À partir de 8€",
     "description": "Dégustation de street food du monde entier dans le plus vieux marché couvert de Paris.",
@@ -17,6 +21,8 @@
   },
   {
     "date": "Du 8 au 14 Juin",
+    "date_debut": "2026-06-08",
+    "date_fin": "2026-06-14",
     "lieu": "Musée d'Orsay, 7e",
     "prix": "16€",
     "description": "Exposition temporaire consacrée aux peintres impressionnistes méconnus.",
@@ -25,6 +31,8 @@
   },
   {
     "date": "Samedi 13 Juin",
+    "date_debut": "2026-06-13",
+    "date_fin": null,
     "lieu": "Bassin de la Villette, 19e",
     "prix": "Gratuit",
     "description": "Session gratuite de paddle et kayak ouverte à tous niveaux.",
@@ -33,6 +41,8 @@
   },
   {
     "date": "Tous les week-ends de Juin",
+    "date_debut": "2026-06-01",
+    "date_fin": "2026-06-30",
     "lieu": "Parc des Buttes-Chaumont, 19e",
     "prix": "Entrée libre",
     "description": "Pique-nique géant et jeux en bois sur les pelouses du parc.",
@@ -41,6 +51,8 @@
   },
   {
     "date": "Jeudi 11 Juin",
+    "date_debut": "2026-06-11",
+    "date_fin": null,
     "lieu": "La Cinémathèque Française, 12e",
     "prix": "12€",
     "description": "Projection en plein air d'un classique du cinéma français suivie d'un concert live.",
@@ -49,6 +61,8 @@
   },
   {
     "date": "Vendredi 12 Juin",
+    "date_debut": "2026-06-12",
+    "date_fin": null,
     "lieu": "Wanderlust, 13e",
     "prix": "Entrée libre avant minuit",
     "description": "Soirée techno en bord de Seine avec line-up de DJ locaux.",
@@ -57,6 +71,8 @@
   },
   {
     "date": "Dimanche 14 Juin",
+    "date_debut": "2026-06-14",
+    "date_fin": null,
     "lieu": "Place de la République, 11e",
     "prix": "Gratuit",
     "description": "Marché gourmand éphémère avec food trucks et producteurs locaux.",
@@ -65,6 +81,8 @@
   },
   {
     "date": "Mercredi 10 Juin",
+    "date_debut": "2026-06-10",
+    "date_fin": null,
     "lieu": "Centre Pompidou, 4e",
     "prix": "Gratuit le premier dimanche",
     "description": "Visite nocturne exceptionnelle des collections d'art moderne.",
